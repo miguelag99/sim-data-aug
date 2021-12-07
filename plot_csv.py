@@ -8,13 +8,13 @@ from file_utils import read_params,read_labels,read_timestamps
 from print_utils import print_2d_box, print_3d_box, print_center
  
 
-LABEL_PATH = "/home/miguel/simulation-data-aug/perception/groundtruth.csv"
-CALIB_PATH = "/home/miguel/simulation-data-aug/perception/camera/intrinsic_matrix.txt"
-IMAGE_PATH = "/home/miguel/simulation-data-aug/perception/camera/data/"
-TIME_FILE = "/home/miguel/simulation-data-aug/perception/camera/timestamp.txt"
-KITTI_PATH = "/home/miguel/simulation-data-aug/kitti_transform/"
+def main(local_path):
 
-def main():
+    LABEL_PATH = os.path.join(local_path,"perception/groundtruth.csv")
+    CALIB_PATH = os.path.join(local_path,"perception/camera/intrinsic_matrix.txt")
+    IMAGE_PATH = os.path.join(local_path,"perception/camera/data/")
+    TIME_FILE = os.path.join(local_path,"perception/camera/timestamp.txt")
+    SAVE_PATH = os.path.join(local_path,"plot/")
 
     image_files = sorted(os.listdir(IMAGE_PATH))
     image_files = [IMAGE_PATH + name for name in image_files]
@@ -44,8 +44,14 @@ def main():
         # cv2.imshow('image',im)
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
-        cv2.imwrite(KITTI_PATH+name+".jpg",im)
+        cv2.imwrite(SAVE_PATH+name+".jpg",im)
    
 
 if __name__ == "__main__":
-    main()
+
+    os.chdir("..")
+    path = os.getcwd()
+    if not os.path.isdir(os.path.join(path,"plot")):
+        os.mkdir(os.path.join(path,"plot"))
+
+    main(path)
