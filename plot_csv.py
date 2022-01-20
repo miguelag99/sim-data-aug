@@ -31,7 +31,7 @@ def main(local_path):
         # cv2.putText(im,str(timestamp),(0,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 1, cv2.LINE_AA)
         # print(timestamp)
         # print(image_files[i].split('/')[7].split('.')[0])
-        name = image_files[i].split('/')[7].split('.')[0]
+        name = image_files[i].split('/')[8].split('.')[0]
         
         ## Get objects in the same frame
         labels = obj[obj['timestamp'] == round(timestamp,4)]
@@ -49,7 +49,7 @@ def main(local_path):
 
 if __name__ == "__main__":
 
-    os.chdir("..")
+    os.chdir("../datasets/")
     path = os.getcwd()
     if not os.path.isdir(os.path.join(path,"plot")):
         os.mkdir(os.path.join(path,"plot"))
