@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import math
 import cv2
+import argparse
 
 from file_utils import read_labels,read_timestamps
 
@@ -11,9 +12,12 @@ from file_utils import read_labels,read_timestamps
 def main(local_path):
 
     LABEL_PATH = os.path.join(local_path,"groundtruth.csv")
-    IMAGE_PATH = os.path.join(local_path,"camera/data/")
+    IMAGE_PATH = os.path.join(local_path,"camera/images/")
     TIME_FILE = os.path.join(local_path,"camera/timestamp.txt")
-    TRANSFORM_PATH = os.path.join(local_path,"coco_format/")
+    TRANSFORM_PATH = os.path.join(local_path,"camera/labels/")
+
+    if not os.path.isdir(TRANSFORM_PATH):
+        os.mkdir(TRANSFORM_PATH)
 
     image_files = sorted(os.listdir(IMAGE_PATH))
     image_files = [IMAGE_PATH + name for name in image_files]
@@ -29,8 +33,8 @@ def main(local_path):
     for i in range(len(image_files)):
 
         timestamp = timestamps[i]
-
-        name = image_files[i].split('/')[7].split('.')[0]
+        
+        name = image_files[i].split('/')[-1].split('.')[0]
         name = name + ".txt"
         print(name)
 
@@ -40,6 +44,10 @@ def main(local_path):
         labels = obj[obj['timestamp'] == round(timestamp,4)]
         ## Filter objects out of camera fov
         labels = labels[labels['left'] != -1]
+        labels = labels[labels['occluded'] != 3]
+        labels = labels[labels['occluded'] != 2]
+        ## Filter far objects
+        labels = labels[labels['x'] < 50]
 
         for i in range(len(labels)):
 
@@ -53,10 +61,12 @@ def main(local_path):
             
             w = min((bbox[2] - bbox[0])/siz_im[0],1)
             h = min((bbox[3] - bbox[1])/siz_im[1],1)
-            center = [min((bbox[2] + bbox[0])/(2*siz_im[1]),1),min((bbox[3] + bbox[0])/(2*siz_im[1]),1)]
-            print(center)
-            file.write("{} {} {} {} {}".format(cl,center[0],center[1],w,h))
-            file.write('\n')
+            
+            center = [min((bbox[2] + bbox[0])/(2*siz_im[1]),1),min((bbox[3] + bbox[1])/(2*siz_im[0]),1)]
+            
+            if cl == 0:
+                file.write("{} {} {} {} {}".format(cl,center[0],center[1],w,h))
+                file.write('\n')
 
 
     file.close()
@@ -69,9 +79,8 @@ def main(local_path):
 
 if __name__ == "__main__":
 
-    os.chdir("../datasets/perception/")
-    path = os.getcwd()
-    if not os.path.isdir(os.path.join(path,"coco_format")):
-        os.mkdir(os.path.join(path,"coco_format"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d","--dataset_dir",help ="Dataset directory",type =str)
+    args = parser.parse_args()
 
-    main(path)
+    main(args.dataset_dir)

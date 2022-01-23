@@ -20,17 +20,17 @@ def main(path,train_p,val_p,test_p):
 
     tr_file = open(os.path.join(path,"train.txt"),'w')
     for file in train_images:
-        tr_file.write(os.path.join('./images',file))
+        tr_file.write(os.path.join(path,"images",file))
         tr_file.write('\n')
 
     val_file = open(os.path.join(path,"val.txt"),'w')
     for file in val_images:
-        val_file.write(os.path.join('./images',file))
+        val_file.write(os.path.join(path,"images",file))
         val_file.write('\n')
 
     test_file = open(os.path.join(path,"test.txt"),'w')
     for file in test_images:
-        test_file.write(os.path.join('./images',file))
+        test_file.write(os.path.join(path,"images",file))
         test_file.write('\n')
 
 
@@ -39,11 +39,11 @@ def main(path,train_p,val_p,test_p):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-dir","--kitti_dir",help ="Kitti directory",type =str)
+    parser.add_argument("-dir","--dataset_dir",help ="Dataset directory",type =str)
     parser.add_argument("-tr","--train_perc",help ="Training percetage",type =float)
     parser.add_argument("-val","--val_perc",help ="Validation percetage",type =float)
     parser.add_argument("-te","--test_perc",help ="Testing percetage",type =float)
     args = parser.parse_args()
 
-    os.chdir(args.kitti_dir)
+    os.chdir(args.dataset_dir)
     main(os.getcwd(),args.train_perc,args.val_perc,args.test_perc)
