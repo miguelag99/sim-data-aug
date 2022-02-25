@@ -59,8 +59,8 @@ def main(local_path):
             
             bbox = (labels.iloc[i]['left'],labels.iloc[i]['top'],labels.iloc[i]['right'],labels.iloc[i]['bottom'])
             
-            w = min((bbox[2] - bbox[0])/siz_im[0],1)
-            h = min((bbox[3] - bbox[1])/siz_im[1],1)
+            w = min((bbox[2] - bbox[0])/siz_im[1],1)
+            h = min((bbox[3] - bbox[1])/siz_im[0],1)
             
             center = [min((bbox[2] + bbox[0])/(2*siz_im[1]),1),min((bbox[3] + bbox[1])/(2*siz_im[0]),1)]
             

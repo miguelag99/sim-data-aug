@@ -2,7 +2,7 @@ import os
 import argparse
 
 def main(path,train_p,val_p,test_p):
-    images = sorted(os.listdir(os.path.join(path,"images")))
+    images = sorted(os.listdir(os.path.join(path,"camera/images")))
     n_images = len(images)
 
     n_training = int(n_images*train_p)
@@ -20,17 +20,17 @@ def main(path,train_p,val_p,test_p):
 
     tr_file = open(os.path.join(path,"train.txt"),'w')
     for file in train_images:
-        tr_file.write(os.path.join(path,"images",file))
+        tr_file.write(os.path.join(path,"camera/images",file))
         tr_file.write('\n')
 
     val_file = open(os.path.join(path,"val.txt"),'w')
     for file in val_images:
-        val_file.write(os.path.join(path,"images",file))
+        val_file.write(os.path.join(path,"camera/images",file))
         val_file.write('\n')
 
     test_file = open(os.path.join(path,"test.txt"),'w')
     for file in test_images:
-        test_file.write(os.path.join(path,"images",file))
+        test_file.write(os.path.join(path,"camera/images",file))
         test_file.write('\n')
 
 
