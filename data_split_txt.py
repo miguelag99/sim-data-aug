@@ -1,8 +1,11 @@
 import os
 import argparse
 
+
 def main(path,train_p,val_p,test_p):
-    images = sorted(os.listdir(os.path.join(path,"camera/images")))
+    # images = sorted(os.listdir(os.path.join(path,"camera/images")))   ## ADPerDevkit
+    images = sorted(os.listdir(os.path.join(path,"images")))            ## Waymo
+        
     n_images = len(images)
 
     n_training = int(n_images*train_p)
@@ -20,17 +23,20 @@ def main(path,train_p,val_p,test_p):
 
     tr_file = open(os.path.join(path,"train.txt"),'w')
     for file in train_images:
-        tr_file.write(os.path.join(path,"camera/images",file))
+        # tr_file.write(os.path.join(path,"camera/images",file))      ## ADPerDevkit
+        tr_file.write(os.path.join(path,"images",file))             ## Waymo
         tr_file.write('\n')
 
     val_file = open(os.path.join(path,"val.txt"),'w')
     for file in val_images:
-        val_file.write(os.path.join(path,"camera/images",file))
+        # val_file.write(os.path.join(path,"camera/images",file))     ## ADPerDevkit
+        val_file.write(os.path.join(path,"images",file))            ## Waymo   
         val_file.write('\n')
 
     test_file = open(os.path.join(path,"test.txt"),'w')
     for file in test_images:
-        test_file.write(os.path.join(path,"camera/images",file))
+        # test_file.write(os.path.join(path,"camera/images",file))    ## ADPerDevkit
+        test_file.write(os.path.join(path,"images",file))           ## Waymo
         test_file.write('\n')
 
 

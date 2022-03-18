@@ -13,8 +13,8 @@ import io
 
 ####### REMOVE IMAGE AND LABELS DIRECTORY BEFORE EXECTUING THIS SCRIPT ##############
 
-SAVE_PATH = '/media/robesafe/SSD_SATA/waymo/training_training_0000/'
-FILENAME = os.path.join(SAVE_PATH,'tfrecords')
+SAVE_PATH = '/home/robesafe/Miguel/datasets/waymo'
+FILENAME = os.path.join(SAVE_PATH,'raw_data')
 
 def main():
     files = sorted([os.path.join(FILENAME,f) for f in os.listdir(FILENAME)])
@@ -37,9 +37,11 @@ def main():
 def extract_camera_data(frame,camera_image, camera_labels,save_dir,cam_id):
     image_path = os.path.join(save_dir,'images')
     label_path = os.path.join(save_dir,'labels')
+    # print(frame.context.stats.time_of_day.lower().strip())
 
-    if camera_image.name == cam_id:
-
+    # Filter by camera id (front camera) and time of day (daytime)
+    if camera_image.name == cam_id and frame.context.stats.time_of_day.lower().strip() == 'day':
+        
         image = Image.open(io.BytesIO(camera_image.image))
         cv_image = cv2.cvtColor(np.asarray(image),cv2.COLOR_RGB2BGR)
         (im_w,im_h) = image.size 
@@ -56,11 +58,13 @@ def extract_camera_data(frame,camera_image, camera_labels,save_dir,cam_id):
                 if label.type == 1:  #Only cars
                     x = label.box.center_x/im_w
                     y = label.box.center_y/im_h
-                    h = label.box.length/im_h
-                    w = label.box.width/im_w
+                    l = label.box.length/im_w
+                    h = label.box.width/im_h
 
-                    # cv2.circle(cv_image,(int(round(label.box.center_x)),int(round(label.box.center_y))),5,(0,0,255),-1)
-                    gt.write(str(0)+' '+str(x)+' '+str(y)+' '+str(w)+' '+str(h)+'\n') ## Only cars, 0 is stored in labels class
+                    if h > 0.03 and l > 0.03:
+                        # cv2.circle(cv_image,(int(round(label.box.center_x)),int(round(label.box.center_y))),5,(0,0,255),-1)
+                        # cv2.rectangle(cv_image,(int(round(label.box.center_x-label.box.length/2)),int(round(label.box.center_y-label.box.width/2))),(int(round(label.box.center_x+label.box.length/2)),int(round(label.box.center_y+label.box.width/2))),(0,0,255),2)
+                        gt.write(str(0)+' '+str(x)+' '+str(y)+' '+str(l)+' '+str(h)+'\n') ## Only cars, 0 is stored in labels class
         
         f_name = os.path.join(image_path,str(len(os.listdir(image_path)))+'.jpeg')
         
