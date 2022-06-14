@@ -47,8 +47,9 @@ def create_gt(scene_path): # Save gt in .txt file with coco format (rgb_00000.tx
                     h = min((bbox[3] - bbox[1])/siz_im[0],1)
                     
                     center = [min((bbox[2] + bbox[0])/(2*siz_im[1]),1),min((bbox[3] + bbox[1])/(2*siz_im[0]),1)]
-                    new_file.write("{} {} {} {} {}".format(0,center[0],center[1],w,h))
-                    new_file.write('\n')
+                    if h > 0.03 and w > 0.03:
+                        new_file.write("{} {} {} {} {}".format(0,center[0],center[1],w,h))
+                        new_file.write('\n')
 
             new_file.close()
     return 0
@@ -56,7 +57,7 @@ def create_gt(scene_path): # Save gt in .txt file with coco format (rgb_00000.tx
 def main(dataset_path):
     a = time.time()
     full_path = [os.path.join(dataset_path,d) for d in SCENES]
-    print(full_path)
+    
     list(map(create_gt,full_path))
     b = time.time()
     print('mkdir time: {}'.format(b-a))
