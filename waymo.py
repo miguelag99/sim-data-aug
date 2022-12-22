@@ -13,7 +13,7 @@ import io
 
 ####### REMOVE IMAGE AND LABELS DIRECTORY BEFORE EXECTUING THIS SCRIPT ##############
 
-SAVE_PATH = '/home/robesafe/Miguel/datasets/waymo'
+SAVE_PATH = '/home/robesafe/Datasets/waymo'
 FILENAME = os.path.join(SAVE_PATH,'raw_data')
 
 def main():
