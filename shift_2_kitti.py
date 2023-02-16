@@ -18,7 +18,7 @@ COMPRESSED_PATH = "/media/robesafe/ff0fec18-b200-4f1b-b17e-f2c93f81163b/shift_da
 
 
 def main():
-    N_SEQ = 130
+    n_seq = 130
     split = 'training'
 
     if not os.path.isdir(os.path.join(DATASET_PATH, split, 'image_2')):
@@ -29,6 +29,8 @@ def main():
         os.mkdir(os.path.join(DATASET_PATH, split, 'depth_map'))
     if not os.path.isdir(os.path.join(DATASET_PATH, split, 'depth_image')):
         os.mkdir(os.path.join(DATASET_PATH, split, 'depth_image'))
+    if not os.path.isdir(os.path.join(DATASET_PATH, split, 'calib')):
+        os.mkdir(os.path.join(DATASET_PATH, split, 'calib'))
 
     left_im_hdf5 = os.path.join(COMPRESSED_PATH, split, "img_left.hdf5")
     right_im_hdf5 = os.path.join(COMPRESSED_PATH, split,"img.hdf5")
@@ -42,14 +44,14 @@ def main():
         depth_nseq = len(list(f.keys()))
 
     assert left_nseq == right_nseq == depth_nseq, "Number of sequences in hdf5 files is not the same"
-    assert left_nseq >= N_SEQ, "Number of sequences in hdf5 files is less than the specified number"
+    assert left_nseq >= n_seq, "Number of sequences in hdf5 files is less than the specified number"
 
     x = Thread(target=convert_left_images,
-        args=(left_im_hdf5,0,'training','training.txt',130,))
+        args=(left_im_hdf5,0,'training','training.txt',n_seq,))
     y = Thread(target=convert_right_images,
-        args=(right_im_hdf5,0,'training',130,))
+        args=(right_im_hdf5,0,'training',n_seq,))
     z = Thread(target=convert_depths,
-        args=(depth_hdf5,0,'training',130,))
+        args=(depth_hdf5,0,'training',n_seq,))
 
     x.start()
     y.start()
@@ -63,7 +65,7 @@ def main():
     print("Done training set")
 
     split = 'validation' ## Kitti format has validation and traning mixed
-    N_SEQ = 50
+    n_seq = 50
 
     left_im_hdf5 = os.path.join(COMPRESSED_PATH, split, "img_left.hdf5")
     right_im_hdf5 = os.path.join(COMPRESSED_PATH, split,"img.hdf5")
@@ -77,19 +79,38 @@ def main():
         depth_nseq = len(list(f.keys()))
 
     assert left_nseq == right_nseq == depth_nseq, "Number of sequences in hdf5 files is not the same"
-    assert left_nseq >= N_SEQ, "Number of sequences in hdf5 files is less than the specified number"
+    assert left_nseq >= n_seq, "Number of sequences in hdf5 files is less than the specified number"
 
     x = Thread(target=convert_left_images,
-        args=(left_im_hdf5,n_training_img,'training','validation.txt',50,))
+        args=(left_im_hdf5,n_training_img,'training','validation.txt',n_seq,))
     y = Thread(target=convert_right_images,
-        args=(right_im_hdf5,n_training_img,'training',50,))
+        args=(right_im_hdf5,n_training_img,'training',n_seq,))
     z = Thread(target=convert_depths,
-        args=(depth_hdf5,n_training_img,'training',50,))
+        args=(depth_hdf5,n_training_img,'training',n_seq,))
 
     x.start()
     y.start()
     z.start()
 
+    x.join()
+    y.join()
+    z.join()
+
+    # Generate calib files
+
+    print('Generating calib files...')
+
+    for im_name in tqdm(sorted(os.listdir(os.path.join(DATASET_PATH, 'training', 'image_2')))):
+        im_idx = im_name.split('.')[0]
+        with open(os.path.join(DATASET_PATH, 'training', 'calib', im_idx + '.txt'), 'w') as f:
+            f.write(f"P0: 640 0 640 0 0 640 400 0 0 0 1 0\n")
+            f.write(f"P1: 640 0 640 0 0 640 400 0 0 0 1 0\n")
+            f.write(f"P2: 640 0 640 0 0 640 400 0 0 0 1 0\n")
+
+
+    # Next, regarding the intrinsic parameters, they are focal_x = focal_y = 640, (center_x, center_y) = (640, 400). 
+    # Note that the focal length is computed using focal_x = focal_y = width / (2 * tan(FoV * np.pi / 360.0)), 
+    # which is 640 in our case. All RGB cameras share the same intrinsics.
 
 
 
@@ -140,7 +161,9 @@ def convert_depths(hdf5_file, idx_offest = 0, split = 'training', n_seq = 1):
 
                 DEPTH_C = np.array(1000.0 / (256 * 256 * 256 - 1), np.float16)
                 depth = (256 * 256 * depth[:, :, 2] +  256 * depth[:, :, 1] + depth[:, :, 0]) * DEPTH_C  # in meters
+                depth[depth>80] = 0
                 np.save(os.path.join(DATASET_PATH, split, 'depth_map', str(im_idx).zfill(6) + '.npy'), depth)
+
 
                 # Convert to kitti format to visualize
                 # depth = depth * 256
