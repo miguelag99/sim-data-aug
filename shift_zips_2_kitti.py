@@ -288,7 +288,7 @@ def convert_depths(zip_file, idx_offest = 0, split = 'training', n_seq = 1, gene
                     kitti_form = Image.fromarray(depth.astype('uint16'))
                     kitti_form.save(os.path.join(DATASET_PATH, split, 'depth_image', str(im_idx).zfill(6) + '.png'))
 
-                    os.remove(os.path.join(DATASET_PATH, split, 'depth_map', dep))
+                os.remove(os.path.join(DATASET_PATH, split, 'depth_map', dep))
 
 
                 im_idx += 1
