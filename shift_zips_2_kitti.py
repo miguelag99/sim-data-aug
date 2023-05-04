@@ -10,9 +10,10 @@ import json
 from threading import Thread
 
 # Transforms zips files to kitti format
-DATASET_PATH = "/home/robesafe/Datasets/shift_dataset"
-COMPRESSED_PATH_TRAIN = "/home/robesafe/Datasets/shift_dataset/zips_training"
-COMPRESSED_PATH_VAL = "/home/robesafe/Datasets/shift_dataset/zips_validation"
+DATASET_PATH = "/home/robesafe/Datasets/shift_dataset/"
+
+COMPRESSED_PATH_TRAIN = "/media/robesafe/ff0fec18-b200-4f1b-b17e-f2c93f81163b1/shift_dataset/zips_training/"
+COMPRESSED_PATH_VAL = "/media/robesafe/ff0fec18-b200-4f1b-b17e-f2c93f81163b1/shift_dataset/zips_validation/"
 
 
 
@@ -64,17 +65,17 @@ def main():
     z = Thread(target=convert_lidar_pcl,
             args=(velo_zip,0,'training',n_seq,))
 
-    v.start()
-    w.start()
-    x.start()
-    y.start()
-    z.start()
+    # v.start()
+    # w.start()
+    # x.start()
+    # y.start()
+    # z.start()
 
-    v.join()
-    w.join()
-    x.join()
-    y.join()
-    z.join()
+    # v.join()
+    # w.join()
+    # x.join()
+    # y.join()
+    # z.join()
 
 
     n_training_img = len(list(os.listdir(os.path.join(DATASET_PATH, split, 'image_2'))))
@@ -114,17 +115,17 @@ def main():
     z = Thread(target=convert_lidar_pcl,
             args=(velo_zip,n_training_img,'training',n_seq,)) 
     
-    v.start()
-    w.start()
-    x.start()
-    y.start()
-    z.start()
+    # v.start()
+    # w.start()
+    # x.start()
+    # y.start()
+    # z.start()
 
-    v.join()
-    w.join()
-    x.join()
-    y.join()
-    z.join()
+    # v.join()
+    # w.join()
+    # x.join()
+    # y.join()
+    # z.join()
 
     # Generate calib files
 
@@ -141,7 +142,7 @@ def main():
             f.write(f"P3: 640 0 640 0 0 640 400 0 0 0 1 0\n")
             f.write(f"R0_rect: 1 0 0 0 1 0 0 0 1\n")
             f.write(f"Tr_velo_to_cam: 0 1 0 0.2 0 0 -1 0 1 0 0 -0.5\n")
-           
+            f.write(f"Tr_imu_to_velo: 1 0 0 0 0 1 0 0 0 0 1 0\n")
 
 
     # Next, regarding the intrinsic parameters, they are focal_x = focal_y = 640, (center_x, center_y) = (640, 400). 
@@ -288,7 +289,7 @@ def convert_depths(zip_file, idx_offest = 0, split = 'training', n_seq = 1, gene
                     kitti_form = Image.fromarray(depth.astype('uint16'))
                     kitti_form.save(os.path.join(DATASET_PATH, split, 'depth_image', str(im_idx).zfill(6) + '.png'))
 
-                    os.remove(os.path.join(DATASET_PATH, split, 'depth_map', dep))
+                os.remove(os.path.join(DATASET_PATH, split, 'depth_map', dep))
 
 
                 im_idx += 1
@@ -342,7 +343,6 @@ def convert_3d_labels(json_3dfile,json_2d_file, idx_offest = 0, split = 'trainin
                     if np.linalg.norm(label3d["box3d"]["location"]) < 60.0:   # Filter by distance.
                         cl = label3d["category"].capitalize()
                         alpha = label3d["box3d"]["alpha"]
-
                         # Check if the object is in the 2D image and get the bbox
                         # If not, set bbox to 0
 
@@ -353,13 +353,25 @@ def convert_3d_labels(json_3dfile,json_2d_file, idx_offest = 0, split = 'trainin
                         else:
                             bbox = (0, 0, 0, 0)
 
-                        loc = project_velo_to_image_2_frame(np.array(label3d["box3d"]["location"]))      # Transform center frame to camera front left frame
-
                         dim = label3d["box3d"]["dimension"]
                         rot = label3d["box3d"]["orientation"][2]
-                        file.write("{} 0.00 0 {} {} {} {} {} {} {} {} {} {} {} {}".format(cl,alpha,bbox[0],bbox[1],bbox[2],bbox[3],\
-                            dim[0],dim[1],dim[2],loc[0],loc[1],loc[2],rot))
-                        file.write('\n')
+
+                        loc = project_velo_to_image_2_frame(np.array(label3d["box3d"]["location"]))      # Transform center frame to camera front left frame
+                        loc[1] += dim[2]/2      # Center of the object is at the bottom of the box
+
+
+
+                        if rot > -np.pi/2 and rot < np.pi/2:
+                            rot += np.pi/2
+                        elif rot < -np.pi/2:
+                            rot += np.pi/2
+                        else:
+                            rot -= 3*np.pi/2
+
+                        if np.sqrt([np.power(loc[0],2) + np.power(loc[2],2)]) > 1:
+                            file.write("{} 0.00 0 {} {} {} {} {} {} {} {} {} {} {} {}".format(cl,alpha,bbox[0],bbox[1],bbox[2],bbox[3],\
+                                dim[2],dim[1],dim[0],loc[0],loc[1],loc[2],rot))
+                            file.write('\n')
 
         lbl_idx += 1
 
