@@ -141,13 +141,16 @@ def main():
             f.write(f"P2: 640 0 640 0 0 640 400 0 0 0 1 0\n")
             f.write(f"P3: 640 0 640 0 0 640 400 0 0 0 1 0\n")
             f.write(f"R0_rect: 1 0 0 0 1 0 0 0 1\n")
-            f.write(f"Tr_velo_to_cam: 0 1 0 0.2 0 0 -1 0 1 0 0 -0.5\n")
+            f.write(f"Tr_velo_to_cam: 0 -1 0 0.2 0 0 -1 0 1 0 0 -0.5\n")    # Modified to invert the original y axis
             f.write(f"Tr_imu_to_velo: 1 0 0 0 0 1 0 0 0 0 1 0\n")
 
 
     # Next, regarding the intrinsic parameters, they are focal_x = focal_y = 640, (center_x, center_y) = (640, 400). 
     # Note that the focal length is computed using focal_x = focal_y = width / (2 * tan(FoV * np.pi / 360.0)), 
     # which is 640 in our case. All RGB cameras share the same intrinsics.
+
+    # The tr_velo_to_cam matrix should be Tr_velo_to_cam: 0 1 0 0.2 0 0 -1 0 1 0 0 -0.5 if the original shift coordinates are used.
+    # For mmdetection 3d training it is necessary to invert the y axis, so the matrix should be Tr_velo_to_cam: 0 -1 0 0.2 0 0 -1 0 1 0 0 -0.5
 
 
 
@@ -332,16 +335,20 @@ def convert_3d_labels(json_3dfile,json_2d_file, idx_offest = 0, split = 'trainin
         if frame["videoName"] in seq_videos_2d:
             new_data_2d.append(frame)
 
-    id_extractor = lambda x: x['id'] if (x["category"] in ["car", "pedestrian", "cyclist"]) else None
+    id_extractor = lambda x: x['id'] if (x["category"] in ["car", "pedestrian", "bicycle"]) else None
 
 
     for i in tqdm(range(len(new_data_3d)), desc = 'Converting 3d labels'):
         obj_id_2d = list(map(id_extractor, new_data_2d[i]["labels"]))
         with open(DATASET_PATH + '/' +split + "/label_2/" + str(lbl_idx).zfill(6) + ".txt", "w+") as file:
             for label3d in new_data_3d[i]["labels"]:
-                if label3d["category"] in ["car", "pedestrian", "cyclist"]:   # Filter by class.
+                if label3d["category"] in ["car", "pedestrian", "bicycle"]:   # Filter by class.
                     if np.linalg.norm(label3d["box3d"]["location"]) < 60.0:   # Filter by distance.
                         cl = label3d["category"].capitalize()
+
+                        if cl == "Bicycle":
+                            cl = "Cyclist"
+
                         alpha = label3d["box3d"]["alpha"]
                         # Check if the object is in the 2D image and get the bbox
                         # If not, set bbox to 0
